@@ -1,0 +1,154 @@
+.TH CDACTL 1 "July 2024" "1.0" "cdactl Manual"
+
+.SH NAME
+cdactl \- Command-line utility for managing network connections, SSH, updates, backups, system monitoring, dotfiles, and credentials.
+
+.SH SYNOPSIS
+.B cdactl
+.I COMMAND
+.I [OPTIONS]
+
+.SH DESCRIPTION
+.B cdactl
+is a versatile command-line utility designed to streamline the management of network connections, SSH access, system updates, backups, system resource monitoring, dotfiles management, and credentials storage for your devices. This tool is particularly useful for DevOps professionals, system administrators, and developers working across multiple devices and environments.
+
+.SH COMMANDS
+.TP
+.B network
+Manage network connections.
+.RS
+.TP
+.B status
+Check the network status.
+.TP
+.B restart
+Restart network services.
+.RE
+
+.TP
+.B ssh
+SSH into devices.
+.RS
+.TP
+.BI hostname
+Specify the hostname to SSH into.
+.RE
+
+.TP
+.B update
+Update system packages.
+.RS
+.TP
+.B update
+Run system updates.
+.RE
+
+.TP
+.B backup
+Manage backups.
+.RS
+.TP
+.B create
+Create a backup of the home directory.
+.TP
+.BI restore " backupFile"
+Restore from a specified backup file.
+.RE
+
+.TP
+.B monitor
+Monitor system resources.
+.RS
+.TP
+.B monitor
+Display system resource usage.
+.RE
+
+.TP
+.B dotfiles
+Manage dotfiles.
+.RS
+.TP
+.B init
+Initialize the dotfiles repository.
+.TP
+.BI add " filename"
+Add a specified dotfile to the repository.
+.TP
+.B pull
+Pull dotfiles from the remote repository.
+.TP
+.B sync
+Sync dotfiles with the remote repository.
+.RE
+
+.TP
+.B cred
+Manage credentials.
+.RS
+.TP
+.BI store " service username password"
+Store credentials for a specified service.
+.TP
+.B retrieve
+Retrieve stored credentials.
+.RE
+
+.TP
+.B help
+Show this help message.
+
+.SH EXAMPLES
+.TP
+.B cdactl network status
+Check the network status.
+
+.TP
+.B cdactl ssh myhostname
+SSH into a device with hostname 'myhostname'.
+
+.TP
+.B cdactl update
+Run system updates.
+
+.TP
+.B cdactl backup create
+Create a backup of the home directory.
+
+.TP
+.B cdactl backup restore mybackup.tar.gz
+Restore from the backup file 'mybackup.tar.gz'.
+
+.TP
+.B cdactl monitor
+Display system resource usage.
+
+.TP
+.B cdactl dotfiles init
+Initialize the dotfiles repository.
+
+.TP
+.B cdactl dotfiles add .zshrc
+Add the .zshrc file to the dotfiles repository.
+
+.TP
+.B cdactl dotfiles pull
+Pull dotfiles from the remote repository.
+
+.TP
+.B cdactl dotfiles sync
+Sync dotfiles with the remote repository.
+
+.TP
+.B cdactl cred store git myusername mypassword
+Store Git credentials.
+
+.TP
+.B cdactl cred retrieve
+Retrieve stored credentials.
+
+.SH AUTHOR
+Developed by Cdaprod.
+
+.SH COPYRIGHT
+This is free software; see the source for copying conditions. There is NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
