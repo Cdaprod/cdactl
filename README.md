@@ -110,8 +110,8 @@ classDiagram
 - **System Updates**: Update and upgrade system packages.
 - **Backups**: Create and restore backups of your system.
 - **System Resource Monitoring**: Monitor system resources in real-time.
-- **Dotfiles Management**: Initialize, add, pull, and sync dotfiles using a bare Git repository.
-- **Credential Management**: Securely store and retrieve credentials for various services.
+- **Dotfiles Management**: Initialize, add, pull, and sync dotfiles are stored in the [cdaprod/cda.cfg](https://github.com/cdaprod/cda.cfg) repository.
+- **Credential Management**: Securely store and retrieve credentials for various services using `export GPG_PASSPHRASE="your-own-secret-password"`.
 
 ## Installation
 
@@ -201,6 +201,10 @@ cdactl dotfiles sync
 `cdactl` can securely store and retrieve credentials for various services using the `cred` command. This ensures that sensitive information is handled securely and is not exposed in plain text.
 
 ### Storing Credentials
+
+```bash
+export GPG_PASSPHRASE="your-own-secret-password"
+```
 
 ```bash
 cdactl cred store <service> <username>
