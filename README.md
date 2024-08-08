@@ -126,8 +126,15 @@ sudo make install
 #### Manual Installation
 
 ```sh
+# Primary Tool
 sudo cp src/cdactl /usr/local/bin/
 sudo chmod +x /usr/local/bin/cdactl
+
+# Color Definitions & Utility Functions
+sudo cp src/cda-common.sh
+sudo chmod +x /usr/local/lib/cda-common.sh
+
+# Man Pages
 sudo cp man/cdactl.1 /usr/share/man/man1/
 sudo gzip /usr/share/man/man1/cdactl.1
 ```
