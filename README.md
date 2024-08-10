@@ -131,7 +131,7 @@ sudo cp src/cdactl /usr/local/bin/
 sudo chmod +x /usr/local/bin/cdactl
 
 # Color Definitions & Utility Functions
-sudo cp src/cda-common.sh
+sudo cp src/cda-common.sh /usr/local/lib/
 sudo chmod +x /usr/local/lib/cda-common.sh
 
 # Man Pages
