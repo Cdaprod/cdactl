@@ -33,17 +33,31 @@ function set_branch_based_on_device {
         exit 1
     fi
 
-    BRANCH_EXISTS=$(cfg branch --list | grep "$BRANCH_NAME")
-    if [ -z "$BRANCH_EXISTS" ]; then
-        print_header "Creating new branch for device: $BRANCH_NAME"
-        cfg checkout -b "$BRANCH_NAME"
-        cfg commit --allow-empty -m "Initial commit on $BRANCH_NAME"
-        cfg push --set-upstream origin "$BRANCH_NAME"
-    else
-        print_header "Switching to branch for device: $BRANCH_NAME"
+    # Fetch all branches from remote
+    cfg fetch
+
+    # Check if the device-specific branch exists locally
+    BRANCH_EXISTS_LOCAL=$(cfg branch --list | grep "^  $BRANCH_NAME$")
+
+    if [ -n "$BRANCH_EXISTS_LOCAL" ]; then
+        print_header "Switching to local branch for device: $BRANCH_NAME"
         cfg checkout "$BRANCH_NAME"
+    else
+        # Check if the device-specific branch exists on remote
+        BRANCH_EXISTS_REMOTE=$(cfg ls-remote --heads origin "$BRANCH_NAME" | grep "$BRANCH_NAME")
+        if [ -n "$BRANCH_EXISTS_REMOTE" ]; then
+            print_header "Checking out remote branch for device: $BRANCH_NAME"
+            cfg checkout -b "$BRANCH_NAME" origin/"$BRANCH_NAME"
+        else
+            # If device-specific branch doesn't exist, switch to main
+            print_header "Switching to main branch as device-specific branch not found."
+            cfg checkout main || {
+                print_error "Failed to checkout main branch. Ensure it exists."
+                exit 1
+            }
+        fi
     fi
-    check_command_status "Branch set to $BRANCH_NAME"
+    check_command_status "Branch set to $(cfg rev-parse --abbrev-ref HEAD)"
 }
 
 function network_command {
@@ -115,24 +129,27 @@ function dotfiles_command {
             echo "alias cfg='/usr/bin/git --git-dir=$HOME/.cfg/ --work-tree=$HOME'" >> $HOME/.bashrc
             source $HOME/.bashrc
             cfg remote add origin https://github.com/Cdaprod/cda.cfg.git || print_warning "Remote origin already exists."
-            check_command_status "Dotfiles initialization"
+            # Checkout main branch initially
+            cfg checkout main || {
+                cfg checkout -b main
+                cfg commit --allow-empty -m "Initial commit on main"
+                cfg push --set-upstream origin main
+            }
+            check_command_status "Dotfiles initialization on main branch"
             ;;
         add)
-            set_branch_based_on_device
-            if [ -z "$2" ]; then
-                print_error "No dotfile specified for addition."
-                exit 1
-            fi
-            print_header "Adding dotfile: $2"
+            # Ensure adding to main branch for shared dotfiles
+            print_header "Switching to main branch to add shared dotfiles"
+            cfg checkout main
             cfg add "$2"
-            cfg commit -m "Add $2"
-            cfg push origin "$BRANCH_NAME"
-            check_command_status "Dotfile added and pushed"
+            cfg commit -m "Add $2 to main"
+            cfg push origin main
+            check_command_status "Dotfile added to main and pushed"
             ;;
         pull)
             set_branch_based_on_device
             print_header "Pulling dotfiles from remote"
-            cfg pull origin "$BRANCH_NAME"
+            cfg pull origin "$(cfg rev-parse --abbrev-ref HEAD)"
             check_command_status "Dotfiles pulled"
             ;;
         sync)
@@ -140,7 +157,7 @@ function dotfiles_command {
             print_header "Syncing dotfiles with remote"
             cfg add -A
             cfg commit -m "Sync dotfiles"
-            cfg push origin "$BRANCH_NAME"
+            cfg push origin "$(cfg rev-parse --abbrev-ref HEAD)"
             check_command_status "Dotfiles synced"
             ;;
         *)
