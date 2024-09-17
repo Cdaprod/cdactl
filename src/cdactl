@@ -21,7 +21,7 @@ function show_cdactl_usage {
     echo -e "  ${GREEN}3. update${NC}     - Update system packages"
     echo -e "  ${GREEN}4. backup${NC}     - Manage backups"
     echo -e "  ${GREEN}5. monitor${NC}    - Monitor system resources"
-    echo -e "  ${GREEN}6. dotfiles${NC}   - Manage dotfiles (init, add, pull, sync)"
+    echo -e "  ${GREEN}6. dotfiles${NC}   - Manage dotfiles (init, add, pull, pull-file, sync)"
     echo -e "  ${GREEN}7. cred${NC}       - Manage credentials (store, retrieve)"
     echo -e "  ${GREEN}8. help${NC}       - Show this help message"
 }
@@ -36,28 +36,27 @@ function set_branch_based_on_device {
     # Fetch all branches from remote
     cfg fetch
 
-    # Check if the device-specific branch exists locally
+    # Check if the branch exists locally
     BRANCH_EXISTS_LOCAL=$(cfg branch --list | grep "^  $BRANCH_NAME$")
 
     if [ -n "$BRANCH_EXISTS_LOCAL" ]; then
         print_header "Switching to local branch for device: $BRANCH_NAME"
         cfg checkout "$BRANCH_NAME"
     else
-        # Check if the device-specific branch exists on remote
+        # Check if the branch exists on remote
         BRANCH_EXISTS_REMOTE=$(cfg ls-remote --heads origin "$BRANCH_NAME" | grep "$BRANCH_NAME")
         if [ -n "$BRANCH_EXISTS_REMOTE" ]; then
             print_header "Checking out remote branch for device: $BRANCH_NAME"
             cfg checkout -b "$BRANCH_NAME" origin/"$BRANCH_NAME"
         else
-            # If device-specific branch doesn't exist, switch to main
-            print_header "Switching to main branch as device-specific branch not found."
-            cfg checkout main || {
-                print_error "Failed to checkout main branch. Ensure it exists."
-                exit 1
-            }
+            # If branch doesn't exist remotely, create it locally
+            print_header "Creating new branch for device: $BRANCH_NAME"
+            cfg checkout -b "$BRANCH_NAME"
+            cfg commit --allow-empty -m "Initial commit on $BRANCH_NAME"
+            cfg push --set-upstream origin "$BRANCH_NAME"
         fi
     fi
-    check_command_status "Branch set to $(cfg rev-parse --abbrev-ref HEAD)"
+    check_command_status "Branch set to $BRANCH_NAME"
 }
 
 function network_command {
@@ -78,6 +77,10 @@ function network_command {
 }
 
 function ssh_command {
+    if [ -z "$1" ]; then
+        print_error "No hostname specified for SSH."
+        exit 1
+    fi
     print_header "Connecting to device: $1"
     ssh "$1"
 }
@@ -138,19 +141,46 @@ function dotfiles_command {
             check_command_status "Dotfiles initialization on main branch"
             ;;
         add)
-            # Ensure adding to main branch for shared dotfiles
-            print_header "Switching to main branch to add shared dotfiles"
-            cfg checkout main
+            set_branch_based_on_device
+            if [ -z "$2" ]; then
+                print_error "No dotfile specified for addition."
+                exit 1
+            fi
+            print_header "Adding dotfile: $2"
             cfg add "$2"
-            cfg commit -m "Add $2 to main"
-            cfg push origin main
-            check_command_status "Dotfile added to main and pushed"
+            cfg commit -m "Add $2"
+            cfg push origin "$BRANCH_NAME"
+            check_command_status "Dotfile added and pushed"
             ;;
         pull)
             set_branch_based_on_device
             print_header "Pulling dotfiles from remote"
             cfg pull origin "$(cfg rev-parse --abbrev-ref HEAD)"
             check_command_status "Dotfiles pulled"
+            ;;
+        pull-file)
+            # New subcommand to pull a specific file from a specified branch
+            if [ -z "$2" ] || [ -z "$3" ]; then
+                print_error "Usage: cdactl dotfiles pull-file <branch> <file_path>"
+                exit 1
+            fi
+            TARGET_BRANCH="$2"
+            FILE_PATH="$3"
+
+            print_header "Fetching latest from origin"
+            cfg fetch origin
+
+            # Check if the branch exists on remote
+            BRANCH_EXISTS_REMOTE=$(cfg ls-remote --heads origin "$TARGET_BRANCH" | grep "$TARGET_BRANCH")
+            if [ -z "$BRANCH_EXISTS_REMOTE" ]; then
+                print_error "Branch '$TARGET_BRANCH' does not exist on remote."
+                exit 1
+            fi
+
+            # Pull the specific file from the target branch
+            print_header "Pulling '$FILE_PATH' from branch '$TARGET_BRANCH'"
+            cfg checkout "$TARGET_BRANCH" -- "$FILE_PATH"
+            check_command_status "Pulled '$FILE_PATH' from '$TARGET_BRANCH'"
             ;;
         sync)
             set_branch_based_on_device
@@ -161,7 +191,7 @@ function dotfiles_command {
             check_command_status "Dotfiles synced"
             ;;
         *)
-            print_error "Invalid dotfiles command. Use: init, add, pull, or sync"
+            print_error "Invalid dotfiles command. Use: init, add, pull, pull-file, or sync"
             ;;
     esac
 }
@@ -174,7 +204,7 @@ read_password() {
     read password
     stty echo
     echo
-    echo $password
+    echo "$password"
 }
 
 function cred_command {
@@ -187,6 +217,8 @@ function cred_command {
                 exit 1
             fi
             PASSWORD=$(read_password "Input Secure Key")
+            # Ensure the credentials file exists
+            touch ~/.git-credentials
             echo "url=https://$SERVICE" >> ~/.git-credentials
             echo "username=$USERNAME" >> ~/.git-credentials
             echo "password=$PASSWORD" >> ~/.git-credentials
@@ -195,7 +227,11 @@ function cred_command {
             ;;
         retrieve)
             print_header "Retrieving stored credentials"
-            cat ~/.git-credentials
+            if [ -f ~/.git-credentials ]; then
+                cat ~/.git-credentials
+            else
+                print_warning "No credentials stored."
+            fi
             ;;
         *)
             print_error "Invalid cred command. Use: store or retrieve"
