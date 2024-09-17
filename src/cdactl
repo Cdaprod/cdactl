@@ -159,13 +159,13 @@ function dotfiles_command {
             check_command_status "Dotfiles pulled"
             ;;
         pull-file)
-            # New subcommand to pull a specific file from a specified branch
+            # Enhanced subcommand to pull a specific file from a specified branch
             if [ -z "$2" ] || [ -z "$3" ]; then
-                print_error "Usage: cdactl dotfiles pull-file <branch> <file_path>"
+                print_error "Usage: cdactl dotfiles pull-file <branch> <filename.ext>"
                 exit 1
             fi
             TARGET_BRANCH="$2"
-            FILE_PATH="$3"
+            FILENAME="$3"
 
             print_header "Fetching latest from origin"
             cfg fetch origin
@@ -177,7 +177,26 @@ function dotfiles_command {
                 exit 1
             fi
 
-            # Pull the specific file from the target branch
+            # Search for the file in the specified branch
+            MATCHES=$(cfg ls-tree -r "$TARGET_BRANCH" --name-only | grep "/$FILENAME$" || true)
+            MATCHES_DIRECT=$(cfg ls-tree -r "$TARGET_BRANCH" --name-only | grep "^$FILENAME$" || true)
+            MATCHES_ALL=$(echo -e "$MATCHES\n$MATCHES_DIRECT" | sort | uniq)
+
+            if [ -z "$MATCHES_ALL" ]; then
+                print_error "File '$FILENAME' not found in branch '$TARGET_BRANCH'."
+                exit 1
+            fi
+
+            NUM_MATCHES=$(echo "$MATCHES_ALL" | wc -l)
+            if [ "$NUM_MATCHES" -gt 1 ]; then
+                echo -e "${YELLOW}Multiple matches found for '$FILENAME' in branch '$TARGET_BRANCH':${NC}"
+                echo "$MATCHES_ALL" | nl -w2 -s'. '
+                echo -e "${YELLOW}Please specify the exact path or rename your file to avoid ambiguity.${NC}"
+                exit 1
+            fi
+
+            FILE_PATH=$(echo "$MATCHES_ALL" | head -n1)
+
             print_header "Pulling '$FILE_PATH' from branch '$TARGET_BRANCH'"
             cfg checkout "$TARGET_BRANCH" -- "$FILE_PATH"
             check_command_status "Pulled '$FILE_PATH' from '$TARGET_BRANCH'"
