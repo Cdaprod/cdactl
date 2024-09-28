@@ -258,6 +258,23 @@ function cred_command {
     esac
 }
 
+# Function to launch nvim with tmux
+function launch_nvim_with_tmux() {
+    if [ -d ".git" ]; then
+        # In a git repository
+        # Create a new tmux session or attach to an existing one
+        tmux new-session -d -s nvim_session "nvim" && \
+        tmux split-window -h "git status" && \
+        tmux select-pane -t 0 && \
+        tmux resize-pane -R 30
+        tmux attach-session -d -s nvim_session
+    else
+        # Not in a git repository
+        tmux new-session -d -s nvim_session "nvim" && \
+        tmux attach-session -d -s nvim_session
+    fi
+}
+
 case "$1" in
     network)
         network_command "$2"
@@ -279,6 +296,9 @@ case "$1" in
         ;;
     cred)
         cred_command "$2" "$3" "$4"
+        ;;
+    nvim)
+        launch_nvim_with_tmux  # New case for launching nvim with tmux
         ;;
     help|*)
         show_cdactl_usage
