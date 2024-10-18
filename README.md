@@ -15,7 +15,7 @@
 
 ## Overview
 
-`cdactl` is a versatile command-line utility designed to streamline the management of network connections, SSH access, system updates, backups, system resource monitoring, dotfiles management, and credential storage for your devices. This tool is particularly useful for DevOps professionals, system administrators, and developers working across multiple devices and environments.
+`cdactl` is a versatile command-line utility designed to streamline the management of network connections, SSH access, system updates, backups, system resource monitoring, dotfiles management, and credential storage for your devices. This tool is particularly useful for DevOps professionals, system administrators, and developers working across multiple devices and environments!
 
 ```mermaid
 classDiagram
