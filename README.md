@@ -1,4 +1,4 @@
-```markdown
+
 <style>
   .header-image {
     display: block;
