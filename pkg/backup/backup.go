@@ -53,3 +53,53 @@ func restoreBackup(backupFile string) {
 		fmt.Println("Backup restored successfully.")
 	}
 }
+
+// cmd/backup/backup.go (continued)
+
+var backupCronCmd = &cobra.Command{
+	Use:   "cron",
+	Short: "Backup scheduled tasks (cron jobs)",
+	Run: func(cmd *cobra.Command, args []string) {
+		backupDir := filepath.Join(os.Getenv("HOME"), "backup", "cron")
+		fmt.Println("=== Backing Up Cron Jobs ===")
+		if err := os.MkdirAll(backupDir, 0755); err != nil {
+			fmt.Println("✖ Failed to create backup directory for cron jobs.")
+			os.Exit(1)
+		}
+
+		// Backup user cron jobs
+		userCronFile := filepath.Join(backupDir, "user_cron_jobs.txt")
+		cmdUserCron := exec.Command("crontab", "-l")
+		userCronOutput, err := cmdUserCron.Output()
+		if err == nil {
+			if err := ioutil.WriteFile(userCronFile, userCronOutput, 0644); err != nil {
+				fmt.Println("✖ Failed to write user cron jobs.")
+				os.Exit(1)
+			}
+			fmt.Println("✔ User cron jobs backed up successfully.")
+		} else {
+			fmt.Println("⚠ No user cron jobs found or failed to retrieve.")
+		}
+
+		// Backup root cron jobs
+		rootCronFile := filepath.Join(backupDir, "root_cron_jobs.txt")
+		cmdRootCron := exec.Command("crontab", "-u", "root", "-l")
+		rootCronOutput, err := cmdRootCron.Output()
+		if err == nil {
+			if err := ioutil.WriteFile(rootCronFile, rootCronOutput, 0644); err != nil {
+				fmt.Println("✖ Failed to write root cron jobs.")
+				os.Exit(1)
+			}
+			fmt.Println("✔ Root cron jobs backed up successfully.")
+		} else {
+			fmt.Println("⚠ No root cron jobs found or failed to retrieve.")
+		}
+	},
+}
+
+func init() {
+	BackupCmd.AddCommand(backupCreateCmd)
+	BackupCmd.AddCommand(backupRestoreCmd)
+	BackupCmd.AddCommand(backupLogsCmd)
+	BackupCmd.AddCommand(backupCronCmd)
+}
