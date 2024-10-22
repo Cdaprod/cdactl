@@ -1,5 +1,30 @@
-# config.yaml
-backup_dir: "/home/user/backups"
-ssh_key_path: "/home/user/.ssh/id_rsa"
-network_interface: "eth0"
-default_dotfile_branch: "main"
+# ~/.config/cdactl/config.yaml
+
+dotfile:
+  repo_path: "/home/user/.cfg" # Path to the bare Git repository for dotfiles
+  branch_template: "{hostname}/{arch}" # Template for branch naming
+  excludes:
+    - "minio-persistent-data"
+    - ".git"
+
+backup:
+  backup_dir: "/home/user/backups"
+
+ssh:
+  default_user: "your_default_username"
+  hosts:
+    - name: "Work Server"
+      host: "work.example.com"
+      user: "workuser"
+      port: 22
+      key_path: "/home/user/.ssh/work_id_rsa"
+    - name: "Home Server"
+      host: "home.example.com"
+      user: "homeuser"
+      port: 2222
+      key_path: "/home/user/.ssh/home_id_rsa"
+
+network:
+  default_interface: "eth0"
+
+# Add more configurations as needed for other packages

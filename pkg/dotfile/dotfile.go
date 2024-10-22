@@ -11,7 +11,7 @@ import (
     "time"
 
     tea "github.com/charmbracelet/bubbletea"
-    "github.com/go-git/go-git/v5"
+    git "github.com/go-git/go-git/v5"
     "github.com/go-git/go-git/v5/plumbing"
     "github.com/spf13/cobra"
     "github.com/spf13/viper"
@@ -204,7 +204,7 @@ func (m *DotfileModel) addDotfile() tea.Cmd {
             return nil
         }
 
-        _, err = wt.Add(filePath)
+        err = wt.Add(filePath)
         if err != nil {
             m.errorMsg = fmt.Sprintf("Failed to add file: %v", err)
             return nil
@@ -225,8 +225,8 @@ func (m *DotfileModel) addDotfile() tea.Cmd {
         }
 
         // Push the change
-        err = wt.Push(&git.PushOptions{})
-        if err != nil {
+        err = m.gitRepo.Push(&git.PushOptions{})
+        if err != nil && err != git.NoErrAlreadyUpToDate {
             m.errorMsg = fmt.Sprintf("Failed to push: %v", err)
             return nil
         }
@@ -239,14 +239,8 @@ func (m *DotfileModel) addDotfile() tea.Cmd {
 // pullDotfiles initiates the Pull Dotfiles process
 func (m *DotfileModel) pullDotfiles() tea.Cmd {
     return func() tea.Msg {
-        wt, err := m.gitRepo.Worktree()
-        if err != nil {
-            m.errorMsg = fmt.Sprintf("Failed to get worktree: %v", err)
-            return nil
-        }
-
         // Pull the latest changes
-        err = wt.Pull(&git.PullOptions{
+        err := m.gitRepo.Pull(&git.PullOptions{
             RemoteName:    "origin",
             ReferenceName: plumbing.NewBranchReferenceName(m.currentBranch),
             SingleBranch:  true,
@@ -285,21 +279,18 @@ func (m *DotfileModel) pullSpecificDotfile() tea.Cmd {
             return nil
         }
 
-        // Correct usage of CheckoutOptions without the Path field
-        err = wt.Checkout(&git.CheckoutOptions{
-            Branch: plumbing.NewBranchReferenceName(m.currentBranch),
-            Keep:   true,
+        // Note: go-git does not support checking out individual files directly
+        // Alternative approach: reset the specific file to HEAD
+        err = wt.Reset(&git.ResetOptions{
+            Mode:  git.ResetHard,
+            Paths: []string{filePath},
         })
         if err != nil {
-            m.errorMsg = fmt.Sprintf("Failed to checkout branch: %v", err)
+            m.errorMsg = fmt.Sprintf("Failed to reset file: %v", err)
             return nil
         }
 
-        // Manually overwrite the specific file
-        // Note: go-git does not support checking out individual files directly
-        // This requires custom implementation or alternative approaches
-
-        m.errorMsg = fmt.Sprintf("✔ Dotfile %s pulled successfully (individual file checkout not directly supported).", filePath)
+        m.errorMsg = fmt.Sprintf("✔ Dotfile %s pulled successfully.", filePath)
         return nil
     }
 }
@@ -335,7 +326,7 @@ func (m *DotfileModel) syncDotfiles() tea.Cmd {
         }
 
         // Push changes
-        err = wt.Push(&git.PushOptions{})
+        err = m.gitRepo.Push(&git.PushOptions{})
         if err != nil && err != git.NoErrAlreadyUpToDate {
             m.errorMsg = fmt.Sprintf("Failed to push: %v", err)
             return nil
