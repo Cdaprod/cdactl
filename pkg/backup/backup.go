@@ -1,105 +1,158 @@
+// pkg/backup/backup.go
+
 package backup
 
 import (
-	"fmt"
-	"os"
-	"os/exec"
-	"path/filepath"
-	"time"
+    "fmt"
+    "io"
+    "os"
+    "path/filepath"
+    "time"
+
+    tea "github.com/charmbracelet/bubbletea"
+    "github.com/spf13/cobra"
 )
 
-const backupDir = "/home/user/backup" // Adjust path as needed
-
-func HandleCommand(args []string) {
-	if len(args) < 1 {
-		fmt.Println("Usage: cdactl backup <create|restore> [backup_file]")
-		return
-	}
-
-	switch args[0] {
-	case "create":
-		createBackup()
-	case "restore":
-		if len(args) < 2 {
-			fmt.Println("Usage: cdactl backup restore <backup_file>")
-			return
-		}
-		restoreBackup(args[1])
-	default:
-		fmt.Println("Invalid backup command. Use: create or restore")
-	}
+// BackupCmd represents the backup command
+var BackupCmd = &cobra.Command{
+    Use:   "backup",
+    Short: "Manage backups",
+    Long:  `Create, restore, and manage backups of system files, logs, and cron jobs.`,
 }
 
-func createBackup() {
-	timestamp := time.Now().Format("20060102")
-	backupFile := filepath.Join(backupDir, fmt.Sprintf("backup_%s.tar.gz", timestamp))
-
-	cmd := exec.Command("tar", "-czvf", backupFile, "--exclude='minio-persistent-data'", "/home/user") // Adjust path as needed
-	err := cmd.Run()
-	if err != nil {
-		fmt.Println("Error creating backup:", err)
-	} else {
-		fmt.Printf("Backup created successfully at %s\n", backupFile)
-	}
+// NewBackupCmd initializes the backup command and its subcommands
+func NewBackupCmd() *cobra.Command {
+    BackupCmd.AddCommand(backupCreateCmd)
+    BackupCmd.AddCommand(backupRestoreCmd)
+    BackupCmd.AddCommand(backupLogsCmd)
+    return BackupCmd
 }
 
-func restoreBackup(backupFile string) {
-	fullPath := filepath.Join(backupDir, backupFile)
-	cmd := exec.Command("tar", "-xzvf", fullPath, "-C", "/home/user") // Adjust path as needed
-	err := cmd.Run()
-	if err != nil {
-		fmt.Println("Error restoring backup:", err)
-	} else {
-		fmt.Println("Backup restored successfully.")
-	}
+// Subcommands
+var backupCreateCmd = &cobra.Command{
+    Use:   "create",
+    Short: "Create a new backup",
+    Run: func(cmd *cobra.Command, args []string) {
+        model, err := NewBackupModel()
+        if err != nil {
+            fmt.Println("✖ Failed to initialize Backup module:", err)
+            os.Exit(1)
+        }
+
+        if err := tea.NewProgram(model).Start(); err != nil {
+            fmt.Println("✖ Bubble Tea program failed:", err)
+            os.Exit(1)
+        }
+    },
 }
 
-// cmd/backup/backup.go (continued)
-
-var backupCronCmd = &cobra.Command{
-	Use:   "cron",
-	Short: "Backup scheduled tasks (cron jobs)",
-	Run: func(cmd *cobra.Command, args []string) {
-		backupDir := filepath.Join(os.Getenv("HOME"), "backup", "cron")
-		fmt.Println("=== Backing Up Cron Jobs ===")
-		if err := os.MkdirAll(backupDir, 0755); err != nil {
-			fmt.Println("✖ Failed to create backup directory for cron jobs.")
-			os.Exit(1)
-		}
-
-		// Backup user cron jobs
-		userCronFile := filepath.Join(backupDir, "user_cron_jobs.txt")
-		cmdUserCron := exec.Command("crontab", "-l")
-		userCronOutput, err := cmdUserCron.Output()
-		if err == nil {
-			if err := ioutil.WriteFile(userCronFile, userCronOutput, 0644); err != nil {
-				fmt.Println("✖ Failed to write user cron jobs.")
-				os.Exit(1)
-			}
-			fmt.Println("✔ User cron jobs backed up successfully.")
-		} else {
-			fmt.Println("⚠ No user cron jobs found or failed to retrieve.")
-		}
-
-		// Backup root cron jobs
-		rootCronFile := filepath.Join(backupDir, "root_cron_jobs.txt")
-		cmdRootCron := exec.Command("crontab", "-u", "root", "-l")
-		rootCronOutput, err := cmdRootCron.Output()
-		if err == nil {
-			if err := ioutil.WriteFile(rootCronFile, rootCronOutput, 0644); err != nil {
-				fmt.Println("✖ Failed to write root cron jobs.")
-				os.Exit(1)
-			}
-			fmt.Println("✔ Root cron jobs backed up successfully.")
-		} else {
-			fmt.Println("⚠ No root cron jobs found or failed to retrieve.")
-		}
-	},
+var backupRestoreCmd = &cobra.Command{
+    Use:   "restore",
+    Short: "Restore from a backup",
+    Run: func(cmd *cobra.Command, args []string) {
+        // Implement restore functionality
+        fmt.Println("Restore functionality not implemented yet.")
+    },
 }
 
-func init() {
-	BackupCmd.AddCommand(backupCreateCmd)
-	BackupCmd.AddCommand(backupRestoreCmd)
-	BackupCmd.AddCommand(backupLogsCmd)
-	BackupCmd.AddCommand(backupCronCmd)
+var backupLogsCmd = &cobra.Command{
+    Use:   "logs",
+    Short: "View backup logs",
+    Run: func(cmd *cobra.Command, args []string) {
+        // Implement logs functionality
+        fmt.Println("Logs functionality not implemented yet.")
+    },
+}
+
+// BackupModel defines the Bubble Tea model for Backup management
+type BackupModel struct {
+    cursor    int
+    choices   []string
+    quitting  bool
+    errorMsg  string
+}
+
+// NewBackupModel initializes the BackupModel
+func NewBackupModel() (*BackupModel, error) {
+    return &BackupModel{
+        choices: []string{"Create Backup", "Restore Backup", "View Logs", "Exit"},
+        cursor:  0,
+    }, nil
+}
+
+// Init is the Bubble Tea Init function
+func (m BackupModel) Init() tea.Cmd {
+    return nil
+}
+
+// Update handles messages and updates the model state
+func (m BackupModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+    switch msg := msg.(type) {
+
+    case tea.KeyMsg:
+        switch msg.String() {
+
+        case "ctrl+c", "q":
+            m.quitting = true
+            return m, tea.Quit
+
+        case "up", "k":
+            if m.cursor > 0 {
+                m.cursor--
+            }
+
+        case "down", "j":
+            if m.cursor < len(m.choices)-1 {
+                m.cursor++
+            }
+
+        case "enter":
+            selected := m.choices[m.cursor]
+            switch selected {
+            case "Create Backup":
+                // Implement Create Backup functionality
+                m.errorMsg = "✔ Create Backup selected."
+            case "Restore Backup":
+                // Implement Restore Backup functionality
+                m.errorMsg = "✔ Restore Backup selected."
+            case "View Logs":
+                // Implement View Logs functionality
+                m.errorMsg = "✔ View Logs selected."
+            case "Exit":
+                m.quitting = true
+                return m, tea.Quit
+            }
+        }
+    }
+
+    return m, nil
+}
+
+// View renders the Bubble Tea UI
+func (m BackupModel) View() string {
+    if m.quitting {
+        return ""
+    }
+
+    s := "=== Backup Management ===\n\n"
+
+    for i, choice := range m.choices {
+        cursor := " " // no cursor
+        if m.cursor == i {
+            cursor = ">" // cursor
+        }
+        line := fmt.Sprintf("%s %s", cursor, choice)
+        if m.cursor == i {
+            line = fmt.Sprintf("\x1b[7m%s\x1b[0m", line) // Invert colors for selection
+        }
+        s += line + "\n"
+    }
+
+    s += "\nPress q to quit.\n"
+
+    if m.errorMsg != "" {
+        s += fmt.Sprintf("\n✖ %s\n", m.errorMsg)
+    }
+
+    return s
 }
