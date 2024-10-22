@@ -1,24 +1,37 @@
+// pkg/network/network.go
+
 package network
 
 import (
 	"fmt"
 	"os/exec"
+
+	"github.com/spf13/cobra"
 )
 
-func HandleCommand(args []string) {
-	if len(args) < 1 {
-		fmt.Println("Invalid network command. Use: status or restart")
-		return
+func NewNetworkCmd() *cobra.Command {
+	networkCmd := &cobra.Command{
+		Use:   "network",
+		Short: "Manage network settings",
+		Long:  `Commands to manage network settings and configurations.`,
+		Run: func(cmd *cobra.Command, args []string) {
+			if len(args) < 1 {
+				fmt.Println("Invalid network command. Use: status or restart")
+				return
+			}
+
+			switch args[0] {
+			case "status":
+				showNetworkStatus()
+			case "restart":
+				restartNetwork()
+			default:
+				fmt.Println("Invalid network command. Use: status or restart")
+			}
+		},
 	}
 
-	switch args[0] {
-	case "status":
-		showNetworkStatus()
-	case "restart":
-		restartNetwork()
-	default:
-		fmt.Println("Invalid network command. Use: status or restart")
-	}
+	return networkCmd
 }
 
 func showNetworkStatus() {

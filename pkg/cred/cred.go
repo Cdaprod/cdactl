@@ -1,5 +1,3 @@
-// pkg/backup/backup.go
-
 package backup
 
 import (
@@ -47,7 +45,7 @@ var backupRestoreCmd = &cobra.Command{
     Use:   "restore",
     Short: "Restore from a backup",
     Run: func(cmd *cobra.Command, args []string) {
-        // Implement restore functionality
+        // Placeholder for restore functionality
         fmt.Println("Restore functionality not implemented yet.")
     },
 }
@@ -56,7 +54,7 @@ var backupLogsCmd = &cobra.Command{
     Use:   "logs",
     Short: "View backup logs",
     Run: func(cmd *cobra.Command, args []string) {
-        // Implement logs functionality
+        // Placeholder for logs functionality
         fmt.Println("Logs functionality not implemented yet.")
     },
 }
@@ -85,10 +83,8 @@ func (m BackupModel) Init() tea.Cmd {
 // Update handles messages and updates the model state
 func (m BackupModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
     switch msg := msg.(type) {
-
     case tea.KeyMsg:
         switch msg.String() {
-
         case "ctrl+c", "q":
             m.quitting = true
             return m, tea.Quit
@@ -107,13 +103,10 @@ func (m BackupModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
             selected := m.choices[m.cursor]
             switch selected {
             case "Create Backup":
-                // Implement Create Backup functionality
                 m.errorMsg = "✔ Create Backup selected."
             case "Restore Backup":
-                // Implement Restore Backup functionality
                 m.errorMsg = "✔ Restore Backup selected."
             case "View Logs":
-                // Implement View Logs functionality
                 m.errorMsg = "✔ View Logs selected."
             case "Exit":
                 m.quitting = true
