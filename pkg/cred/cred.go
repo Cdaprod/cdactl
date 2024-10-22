@@ -1,71 +1,60 @@
+// pkg/cred/cred.go
+
 package cred
 
 import (
-	"bufio"
-	"fmt"
-	"os"
-	"strings"
+    "fmt"
+    "os"
+
+    tea "github.com/charmbracelet/bubbletea"
+    "github.com/spf13/cobra"
 )
 
-func HandleCommand(args []string) {
-	if len(args) < 1 {
-		fmt.Println("Usage: cdactl cred <store|retrieve> [service] [username]")
-		return
-	}
+// NewCredCmd initializes the credentials command
+func NewCredCmd() *cobra.Command {
+    return &cobra.Command{
+        Use:   "cred",
+        Short: "Manage credentials",
+        Long:  `Store and retrieve credentials securely.`,
+        Run: func(cmd *cobra.Command, args []string) {
+            model, err := NewCredModel()
+            if err != nil {
+                fmt.Println("✖ Failed to initialize Credentials module:", err)
+                os.Exit(1)
+            }
 
-	switch args[0] {
-	case "store":
-		if len(args) < 3 {
-			fmt.Println("Usage: cdactl cred store <service> <username>")
-			return
-		}
-		storeCredentials(args[1], args[2])
-	case "retrieve":
-		retrieveCredentials()
-	default:
-		fmt.Println("Invalid cred command. Use: store or retrieve")
-	}
+            if err := tea.NewProgram(model).Start(); err != nil {
+                fmt.Println("✖ Bubble Tea program failed:", err)
+                os.Exit(1)
+            }
+        },
+    }
 }
 
-func storeCredentials(service, username string) {
-	fmt.Print("Enter password: ")
-	password, err := bufio.NewReader(os.Stdin).ReadString('\n')
-	if err != nil {
-		fmt.Println("Error reading password:", err)
-		return
-	}
-	password = strings.TrimSpace(password)
-
-	credFile := os.Getenv("HOME") + "/.credentials"
-	file, err := os.OpenFile(credFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)
-	if err != nil {
-		fmt.Println("Error opening credentials file:", err)
-		return
-	}
-	defer file.Close()
-
-	_, err = fmt.Fprintf(file, "service=%s\nusername=%s\npassword=%s\n\n", service, username, password)
-	if err != nil {
-		fmt.Println("Error storing credentials:", err)
-	} else {
-		fmt.Printf("Credentials for %s stored successfully.\n", service)
-	}
+// CredModel defines the Bubble Tea model for Credentials management
+type CredModel struct {
+    // Define your model fields here
 }
 
-func retrieveCredentials() {
-	credFile := os.Getenv("HOME") + "/.credentials"
-	file, err := os.Open(credFile)
-	if err != nil {
-		fmt.Println("Error opening credentials file:", err)
-		return
-	}
-	defer file.Close()
+// NewCredModel initializes the CredModel
+func NewCredModel() (*CredModel, error) {
+    // Initialize your model here
+    return &CredModel{}, nil
+}
 
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		fmt.Println(scanner.Text())
-	}
-	if err := scanner.Err(); err != nil {
-		fmt.Println("Error reading credentials:", err)
-	}
+// Init is the Bubble Tea Init function
+func (m CredModel) Init() tea.Cmd {
+    return nil
+}
+
+// Update handles messages and updates the model state
+func (m CredModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+    // Implement your update logic here
+    return m, nil
+}
+
+// View renders the Bubble Tea UI
+func (m CredModel) View() string {
+    // Implement your view rendering here
+    return "Credentials Management Interface"
 }

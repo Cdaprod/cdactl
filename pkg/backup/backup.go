@@ -4,10 +4,7 @@ package backup
 
 import (
     "fmt"
-    "io"
     "os"
-    "path/filepath"
-    "time"
 
     tea "github.com/charmbracelet/bubbletea"
     "github.com/spf13/cobra"
@@ -66,10 +63,10 @@ var backupLogsCmd = &cobra.Command{
 
 // BackupModel defines the Bubble Tea model for Backup management
 type BackupModel struct {
-    cursor    int
-    choices   []string
-    quitting  bool
-    errorMsg  string
+    cursor   int
+    choices  []string
+    quitting bool
+    errorMsg string
 }
 
 // NewBackupModel initializes the BackupModel
