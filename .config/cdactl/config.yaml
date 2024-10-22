@@ -1,17 +1,17 @@
 # ~/.config/cdactl/config.yaml
 
 dotfile:
-  repo_path: "/home/user/.cfg"
-  remote_url: "git@github.com:YourUsername/YourRepo.git"
+  repo_path: "/home/cdaprod/.cfg"
+  remote_url: "git@github.com:Cdaprod/cda.cfg.git"
   branch_template: "{hostname}/{arch}"
   excludes:
     - ".git"
 
 backup:
-  backup_dir: "/home/user/backups"
+  backup_dir: "/home/cdaprod/backups"
 
 ssh:
-  default_user: "your_default_username"
+  default_user: "cdaprod"
   hosts:
     - name: "Work Server"
       host: "work.example.com"

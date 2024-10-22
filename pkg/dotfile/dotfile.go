@@ -1,8 +1,11 @@
+// pkg/dotfile/dotfile.go
+
 package dotfile
 
 import (
     "bufio"
     "fmt"
+    "io"
     "net"
     "os"
     "os/exec"
@@ -101,6 +104,9 @@ func NewDotfileModel() (*DotfileModel, error) {
     // Determine current branch name based on template
     hostname, _ := os.Hostname()
     archBytes, err := exec.Command("uname", "-m").Output()
+    if err != nil {
+        return nil, fmt.Errorf("failed to get architecture: %v", err)
+    }
     arch := strings.TrimSpace(string(archBytes))
     branchName := config.BranchTemplate
     branchName = strings.ReplaceAll(branchName, "{hostname}", hostname)
@@ -194,18 +200,16 @@ func (m DotfileModel) View() string {
 
 // sshAuth returns the SSH authentication method
 func sshAuth() (ssh.AuthMethod, error) {
-    sshAgentSock := os.Getenv("SSH_AUTH_SOCK")
-    if sshAgentSock == "" {
-        return nil, fmt.Errorf("SSH_AUTH_SOCK not set. Ensure ssh-agent is running.")
+    user := os.Getenv("USER")
+    if user == "" {
+        user = "git" // Default to 'git' if USER is not set
     }
 
-    conn, err := net.Dial("unix", sshAgentSock)
+    auth, err := ssh.NewSSHAgentAuth(user)
     if err != nil {
-        return nil, fmt.Errorf("Failed to connect to SSH agent: %v", err)
+        return nil, fmt.Errorf("Failed to create SSH agent auth: %v", err)
     }
-
-    agentClient := agent.NewClient(conn)
-    return ssh.PublicKeysCallback(agentClient.Signers), nil
+    return auth, nil
 }
 
 // initDotfile initializes the dotfiles repository
@@ -237,11 +241,6 @@ func (m *DotfileModel) initDotfile() tea.Cmd {
         // Set up the device-specific branch
         branchRef := plumbing.NewBranchReferenceName(m.currentBranch)
         // Create an initial empty commit
-        wt, err := m.gitRepo.Worktree()
-        if err != nil {
-            m.errorMsg = fmt.Sprintf("Failed to get worktree: %v", err)
-            return nil
-        }
 
         // Since it's a bare repo, we need to use plumbing to create an empty commit
         // Create initial commit object
@@ -256,7 +255,7 @@ func (m *DotfileModel) initDotfile() tea.Cmd {
                 Email: fmt.Sprintf("%s@localhost", os.Getenv("USER")),
                 When:  time.Now(),
             },
-            Message: "Initial commit",
+            Message:  "Initial commit",
             TreeHash: plumbing.NewHash("4b825dc642cb6eb9a060e54bf8d69288fbee4904"), // Empty tree hash
         }
 
