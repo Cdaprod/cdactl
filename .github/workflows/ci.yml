@@ -1,0 +1,65 @@
+name: Build and Push Docker Image
+
+on:
+  push:
+    branches:
+      - '**'
+    tags:
+      - "v*.*.*"
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: 1.20
+
+      - name: Cache Go modules
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: go-mod-${{ hashFiles('go.sum') }}
+          restore-keys: |
+            go-mod-
+
+      - name: Build the Go binary
+        run: |
+          go build -o ./cdactl ./cmd/cdactl/main.go
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      # Only log in to Docker if the DOCKER_PASSWORD secret is available
+      - name: Log in to DockerHub
+        if: secrets.DOCKER_PASSWORD != ''
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      # Build and push the Docker image only if DOCKER_PASSWORD is available
+      - name: Build and push Docker image
+        if: secrets.DOCKER_PASSWORD != ''
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: |
+            ${{ secrets.DOCKER_USERNAME }}/cdactl:latest
+            ${{ secrets.DOCKER_USERNAME }}/cdactl:${{ github.sha }}
+
+      # Always run this step to verify the Docker image was built successfully (locally)
+      - name: Verify Docker Image
+        run: docker run --rm ./cdactl help

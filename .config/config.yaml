@@ -1,0 +1,5 @@
+# config.yaml
+backup_dir: "/home/user/backups"
+ssh_key_path: "/home/user/.ssh/id_rsa"
+network_interface: "eth0"
+default_dotfile_branch: "main"
