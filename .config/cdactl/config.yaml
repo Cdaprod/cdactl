@@ -1,10 +1,10 @@
 # ~/.config/cdactl/config.yaml
 
 dotfile:
-  repo_path: "/home/user/.cfg" # Path to the bare Git repository for dotfiles
-  branch_template: "{hostname}/{arch}" # Template for branch naming
+  repo_path: "/home/user/.cfg"
+  remote_url: "git@github.com:YourUsername/YourRepo.git"
+  branch_template: "{hostname}/{arch}"
   excludes:
-    - "minio-persistent-data"
     - ".git"
 
 backup:
