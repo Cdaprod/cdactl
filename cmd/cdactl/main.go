@@ -1,5 +1,3 @@
-// cmd/cdactl/main.go
-
 package main
 
 import (
@@ -19,15 +17,23 @@ import (
 	"github.com/spf13/viper"
 )
 
-// Root command
+var versionFlag bool
+
 var rootCmd = &cobra.Command{
 	Use:   "cdactl",
 	Short: "cdactl is a CLI tool for system management.",
 	Long:  `cdactl is a CLI tool to manage backups, dotfiles, network, SSH connections, and more.`,
+	Run: func(cmd *cobra.Command, args []string) {
+		if versionFlag {
+			fmt.Println("cdactl version 1.0.0") // TODO: automate from git tag
+			return
+		}
+		// Default behavior: show help
+		_ = cmd.Help()
+	},
 }
 
 func init() {
-	// Initialize Cobra commands
 	rootCmd.AddCommand(network.NewNetworkCmd())
 	rootCmd.AddCommand(ssh.NewSSHCmd())
 	rootCmd.AddCommand(update.NewUpdateCmd())
@@ -36,7 +42,6 @@ func init() {
 	rootCmd.AddCommand(dotfile.NewDotfileCmd())
 	rootCmd.AddCommand(cred.NewCredCmd())
 
-	// Add the TUI start command
 	rootCmd.AddCommand(&cobra.Command{
 		Use:   "tui",
 		Short: "Start the Text User Interface (TUI)",
@@ -45,21 +50,18 @@ func init() {
 		},
 	})
 
-	// Load the configuration
+	// Attach the version flag to the root command
+	rootCmd.PersistentFlags().BoolVarP(&versionFlag, "version", "v", false, "Show version info")
+
 	cobra.OnInitialize(initConfig)
 }
 
-// initConfig reads in config file and ENV variables if set
 func initConfig() {
-	// Define where the config file is located
 	viper.SetConfigName("config")
 	viper.SetConfigType("yaml")
-	viper.AddConfigPath("$HOME/.config/cdactl/") // Path to look for the config file
-
-	// Environment variables (optional)
+	viper.AddConfigPath("$HOME/.config/cdactl/")
 	viper.AutomaticEnv()
 
-	// Load the config file
 	if err := viper.ReadInConfig(); err == nil {
 		fmt.Println("Using config file:", viper.ConfigFileUsed())
 	} else {
@@ -67,7 +69,6 @@ func initConfig() {
 	}
 }
 
-// Main entry point
 func main() {
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)
