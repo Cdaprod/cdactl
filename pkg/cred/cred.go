@@ -69,3 +69,16 @@ func retrieveCredentials() {
 		fmt.Println("Error reading credentials:", err)
 	}
 }
+
+// Handler returns a placeholder message for credential operations.
+//
+// Example:
+//
+//	msg, err := cred.Handler()
+//	if err != nil {
+//	        fmt.Println(err)
+//	}
+//	fmt.Println(msg)
+func Handler() (string, error) {
+	return "cred command not supported in TUI", nil
+}

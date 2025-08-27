@@ -25,3 +25,16 @@ func connectToHost(hostname string) {
 		fmt.Printf("Error connecting to host %s: %v\n", hostname, err)
 	}
 }
+
+// Handler returns a placeholder message for SSH commands.
+//
+// Example:
+//
+//	msg, err := ssh.Handler()
+//	if err != nil {
+//	        fmt.Println(err)
+//	}
+//	fmt.Println(msg)
+func Handler() (string, error) {
+	return "ssh command not supported in TUI", nil
+}

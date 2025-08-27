@@ -2,7 +2,6 @@ package backup
 
 import (
 	"fmt"
-	"os"
 	"os/exec"
 	"path/filepath"
 	"time"
@@ -52,4 +51,17 @@ func restoreBackup(backupFile string) {
 	} else {
 		fmt.Println("Backup restored successfully.")
 	}
+}
+
+// Handler returns a placeholder message for backup operations.
+//
+// Example:
+//
+//	msg, err := backup.Handler()
+//	if err != nil {
+//	        fmt.Println(err)
+//	}
+//	fmt.Println(msg)
+func Handler() (string, error) {
+	return "backup command not supported in TUI", nil
 }

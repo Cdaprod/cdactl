@@ -101,3 +101,16 @@ func getBranchName() string {
 	arch, _ := exec.Command("uname", "-m").Output()
 	return fmt.Sprintf("%s/%s", hostname, strings.TrimSpace(string(arch)))
 }
+
+// Handler returns a placeholder message for dotfile operations.
+//
+// Example:
+//
+//	msg, err := dotfile.Handler()
+//	if err != nil {
+//	        fmt.Println(err)
+//	}
+//	fmt.Println(msg)
+func Handler() (string, error) {
+	return "dotfile command not supported in TUI", nil
+}

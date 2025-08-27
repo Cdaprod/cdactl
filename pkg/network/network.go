@@ -40,3 +40,18 @@ func restartNetwork() {
 		fmt.Println("Network restarted successfully.")
 	}
 }
+
+// Handler returns the current network status for display in the TUI.
+//
+// Example:
+//
+//	out, err := network.Handler()
+//	if err != nil {
+//	        log.Fatal(err)
+//	}
+//	fmt.Println(out)
+func Handler() (string, error) {
+	cmd := exec.Command("ip", "-c", "addr", "show")
+	output, err := cmd.CombinedOutput()
+	return string(output), err
+}
