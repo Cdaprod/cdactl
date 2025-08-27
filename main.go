@@ -1,19 +1,29 @@
+// cdactl provides a terminal UI for device management while retaining full CLI support.
+//
+// Usage:
+//   # Start the TUI (default)
+//   cdactl
+//
+//   # Fallback to CLI mode
+//   cdactl --tui=false network status
+//
+// Run with --help to view all available commands.
 package main
 
 import (
     "bufio"
     "fmt"
-    "io"
     "io/ioutil"
-    "log"
     "os"
     "os/exec"
     "path/filepath"
     "strings"
     "time"
 
+    tea "github.com/charmbracelet/bubbletea"
     "golang.org/x/term"
 
+    "github.com/cdaprod/cdactl/tui"
     "github.com/spf13/cobra"
 )
 
@@ -73,7 +83,11 @@ func getHostname() (string, error) {
 
 // Get the device's architecture
 func getArchitecture() string {
-    return exec.Command("uname", "-m").OutputString()
+    out, err := exec.Command("uname", "-m").Output()
+    if err != nil {
+        return ""
+    }
+    return strings.TrimSpace(string(out))
 }
 
 // Get the branch name based on hostname and architecture
@@ -91,12 +105,25 @@ func getBranchName() (string, error) {
 }
 
 // Root command
+var tuiEnabled bool
+
 var rootCmd = &cobra.Command{
     Use:   "cdactl",
     Short: "cdactl is a CLI tool to manage system configurations and dotfiles.",
     Long: `cdactl is a comprehensive command-line tool designed to manage
 system configurations, network connections, SSH into devices, update packages,
 manage backups, monitor system resources, handle dotfiles, and manage credentials.`,
+    Run: func(cmd *cobra.Command, args []string) {
+        if tuiEnabled {
+            m := tui.NewModel("cdactl")
+            if _, err := tea.NewProgram(m).Run(); err != nil {
+                printError("failed to start TUI")
+                os.Exit(1)
+            }
+            return
+        }
+        _ = cmd.Help()
+    },
 }
 
 // Network command
@@ -690,6 +717,8 @@ var credRetrieveCmd = &cobra.Command{
 }
 
 func init() {
+    rootCmd.PersistentFlags().BoolVar(&tuiEnabled, "tui", true, "start the interactive TUI; set --tui=false for CLI mode")
+
     // Add subcommands to network
     networkCmd.AddCommand(networkStatusCmd)
     networkCmd.AddCommand(networkRestartCmd)

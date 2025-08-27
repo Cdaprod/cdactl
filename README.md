@@ -169,6 +169,18 @@ sudo gzip /usr/share/man/man1/cdactl.1
 
 ## Usage
 
+By default `cdactl` launches an interactive terminal UI:
+
+```sh
+cdactl
+```
+
+To skip the TUI and use CLI commands directly:
+
+```sh
+cdactl --tui=false network status
+```
+
 Run `cdactl` followed by a command and its respective options. Below are the available commands and their usage examples:
 
 ### Network Management
