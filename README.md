@@ -149,21 +149,14 @@ sudo make install
 #### Primary Tool
 
 ```sh
-sudo cp src/cdactl /usr/local/bin/
-sudo chmod +x /usr/local/bin/cdactl
-```
-
-#### Color Definitions & Utility Functions
-
-```sh
-sudo cp src/cda-common.sh /usr/local/lib/
-sudo chmod +x /usr/local/lib/cda-common.sh
+go build -o cdactl
+sudo install -m 755 cdactl /usr/local/bin/cdactl
 ```
 
 #### Man Pages
 
 ```sh
-sudo cp man/cdactl.1 /usr/share/man/man1/
+sudo install -m 644 man/cdactl.1 /usr/share/man/man1/
 sudo gzip /usr/share/man/man1/cdactl.1
 ```
 
@@ -206,13 +199,13 @@ Run `cdactl` followed by a command and its respective options. Below are the ava
 - **Create a Backup**
 
   ```sh
-  cdactl backup create
+  cdactl backup create --dir /path/to/backup
   ```
 
 - **Restore from a Backup**
 
   ```sh
-  cdactl backup restore <backup_file>
+  cdactl backup restore <backup_file> --dir /path/to/backup
   ```
 
 ### System Resource Monitoring
@@ -330,7 +323,7 @@ Synchronizes all dotfiles with the remote repository, ensuring consistency acros
 
 ## Credential Management
 
-Managing credentials securely is crucial. `cdactl` leverages Git's credential storage to handle sensitive information without exposing it in plain text.
+Managing credentials securely is crucial. `cdactl` encrypts credential data using GPG and stores it in `~/.credentials.gpg`, ensuring nothing is kept in plain text.
 
 ### Storing Credentials
 
