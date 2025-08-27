@@ -41,8 +41,11 @@
 - **Dotfiles Management**: 
   - Initialize, add, pull, and sync dotfiles stored in the [cdaprod/cda.cfg](https://github.com/cdaprod/cda.cfg) repository.
   
-- **Credential Management**: 
+- **Credential Management**:
   - Securely store and retrieve credentials for various services using `export GPG_PASSPHRASE="your-own-secret-password"`.
+
+- **Interactive TUI**:
+  - Explore commands through a tabbed interface with `cdactl tui`.
 
 ## Diagram
 
