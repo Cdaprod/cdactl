@@ -11,8 +11,9 @@ import tea "github.com/charmbracelet/bubbletea"
 //	p := tea.NewProgram(m)
 //	_ = p.Start()
 type Model struct {
-	message  string
-	quitting bool
+	message   string
+	quitting  bool
+	activeTab int
 }
 
 // NewModel returns a Model with the supplied message.
@@ -33,7 +34,14 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "ctrl+c", "q":
 			m.quitting = true
 			return m, tea.Quit
+		case "tab":
+			m.activeTab = (m.activeTab + 1) % 2
 		}
+	case setMessage:
+		m.message = string(msg)
 	}
 	return m, nil
 }
+
+// setMessage updates the model message via Update.
+type setMessage string
