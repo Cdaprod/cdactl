@@ -7,15 +7,17 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
-func TestModelViewContainsMessage(t *testing.T) {
-	m := NewModel("test")
-	if !strings.Contains(m.View(), "test") {
-		t.Fatalf("expected view to contain message")
+func TestHandlerInvocation(t *testing.T) {
+	m := NewModel()
+	m.items[0].handler = func() (string, error) { return "hello", nil }
+	updated, _ := m.Update(tea.KeyMsg{Type: tea.KeyEnter})
+	if !strings.Contains(updated.(Model).View(), "hello") {
+		t.Fatalf("expected handler output in view")
 	}
 }
 
 func TestUpdateQuit(t *testing.T) {
-	m := NewModel("bye")
+	m := NewModel()
 	msg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'q'}}
 	updated, cmd := m.Update(msg)
 	if cmd == nil {

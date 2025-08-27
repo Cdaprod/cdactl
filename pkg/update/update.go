@@ -24,3 +24,16 @@ func updateSystem() {
 		fmt.Println("System updated successfully.")
 	}
 }
+
+// Handler returns a placeholder message for system updates.
+//
+// Example:
+//
+//	msg, err := update.Handler()
+//	if err != nil {
+//	        fmt.Println(err)
+//	}
+//	fmt.Println(msg)
+func Handler() (string, error) {
+	return "update command not supported in TUI", nil
+}
