@@ -366,6 +366,33 @@ Access the manual page for detailed information on commands and usage:
 man cdactl
 ```
 
+## TUI Usage
+
+The repository includes a minimal text-based interface built with [Bubble Tea](https://github.com/charmbracelet/bubbletea).
+Run a demo and the tests with the following commands:
+
+```sh
+# run a simple demo
+cat <<'EOF' > /tmp/tui_demo.go
+package main
+
+import (
+    tea "github.com/charmbracelet/bubbletea"
+    "github.com/Cdaprod/cdactl/tui"
+)
+
+func main() {
+    m := tui.NewModel("hello")
+    p := tea.NewProgram(m)
+    _ = p.Start()
+}
+EOF
+go run /tmp/tui_demo.go
+
+# run TUI unit tests
+go test ./tui
+```
+
 ## Contributing
 
 Contributions are highly appreciated! Whether you have suggestions for new features, improvements, or bug fixes, feel free to open an issue or submit a pull request.
