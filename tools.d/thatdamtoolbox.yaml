@@ -1,0 +1,7 @@
+name: thatdamtoolbox
+owner: Cdaprod
+repo: ThatDAMToolbox
+asset_template: thatdamtoolbox_{os}_{arch}
+binary_name: thatdamtoolbox
+prefix: /opt/cdaprod/thatdamtoolbox
+mirror: ""

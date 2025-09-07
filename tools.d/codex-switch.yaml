@@ -1,0 +1,7 @@
+name: codex-switch
+owner: Cdaprod
+repo: ThatDAMToolbox
+asset_template: codex-switch_{os}_{arch}
+binary_name: codex-switch
+prefix: /opt/cdaprod/codex-switch
+mirror: ""
